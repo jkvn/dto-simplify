@@ -153,4 +153,4 @@ Goals:
 
 ## 📄 License
 
-MIT License
+[MIT License](https://github.com/jkvn/dto-simplify/blob/main/LICENSE)
