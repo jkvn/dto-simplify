@@ -7,7 +7,7 @@ import java.lang.annotation.*;
 @Repeatable(Dto.Container.class)
 public @interface Dto {
     
-    String value() default "";
+    String value() default "DEFAULT";
 
     @Retention(RetentionPolicy.RUNTIME)
     @Target({ElementType.FIELD})

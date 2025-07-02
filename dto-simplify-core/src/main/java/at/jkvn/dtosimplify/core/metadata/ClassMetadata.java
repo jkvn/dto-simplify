@@ -2,17 +2,16 @@ package at.jkvn.dtosimplify.core.metadata;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class ClassMetadata {
 
     private final Class<?> type;
     private final Map<String, FieldMetadata> fields;
-    private final Map<String, List<String>> viewFieldMapping;
 
-    public ClassMetadata(Class<?> type, Map<String, FieldMetadata> fields, Map<String, List<String>> viewFieldMapping) {
+    public ClassMetadata(Class<?> type, Map<String, FieldMetadata> fields) {
         this.type = type;
         this.fields = fields;
-        this.viewFieldMapping = viewFieldMapping;
     }
 
     public Class<?> getType() {
@@ -23,15 +22,12 @@ public class ClassMetadata {
         return fields;
     }
 
-    public Map<String, List<String>> getViewFieldMapping() {
-        return viewFieldMapping;
-    }
-
-    public List<String> getFieldsForView(String view) {
-        return viewFieldMapping.getOrDefault(view, List.of());
-    }
-
-    public boolean isFieldInView(String fieldName, String view) {
-        return getFieldsForView(view).contains(fieldName);
+    public Map<String, FieldMetadata> getFieldsToView(String profile) {
+        return fields.values().stream()
+                .filter(metadata -> metadata.isDto(profile))
+                .collect(Collectors.toMap(
+                        FieldMetadata::getName,
+                        field -> field
+                ));
     }
 }

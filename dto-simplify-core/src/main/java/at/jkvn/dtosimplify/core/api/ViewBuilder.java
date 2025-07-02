@@ -8,20 +8,20 @@ import java.util.List;
 public class ViewBuilder {
     
     private final Object source;
-    private String view = "DEFAULT";
+    private String profile = "DEFAULT";
 
     public ViewBuilder(Object source) {
         this.source = source;
     }
 
     public ViewBuilder as(String viewName) {
-        this.view = viewName;
+        this.profile = viewName;
         return this;
     }
 
     public Object map() {
-        DtoMappingContext context = new DtoMappingContext(view);
-        return DtoMapper.map(source, context);
+        DtoMappingContext context = DtoMapper.map(source, profile);
+        return context.getFields();
     }
 
     public List<Object> mapList() {

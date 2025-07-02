@@ -14,6 +14,8 @@ public class TestClass {
         ViewBuilder viewBuilder = DtoSimplify
                 .view(testClass)
                 .as("admin");
+
+        System.out.println(viewBuilder.map());
     }
 }
 
