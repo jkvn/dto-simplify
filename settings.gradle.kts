@@ -9,3 +9,4 @@ include("dto-simplify-quarkus:runtime")
 include("dto-simplify-quarkus:deployment")
 
 include("examples:spring-boot")
+include("examples:quarkus")
