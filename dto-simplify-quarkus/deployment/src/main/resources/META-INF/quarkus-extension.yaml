@@ -1,0 +1,10 @@
+name: at.jkvn.dtosimplify
+description: "DtoSimplify Quarkus Extension"
+metadata:
+  keywords:
+    - "dto"
+    - "openapi"
+  categories:
+    - "miscellaneous"
+  status: "experimental"
+artifact: at.jkvn.dtosimplify:dto-simplify-quarkus-deployment

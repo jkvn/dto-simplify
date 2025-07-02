@@ -1,6 +1,7 @@
 package at.jkvn.dtosimplify.core.util;
 
 import at.jkvn.dtosimplify.core.annotation.Dto;
+import at.jkvn.dtosimplify.core.annotation.DtoSchema;
 import at.jkvn.dtosimplify.core.api.DtoSimplify;
 import at.jkvn.dtosimplify.core.api.ViewBuilder;
 
@@ -19,9 +20,11 @@ public class TestClass {
     }
 }
 
+@DtoSchema(value = "admin", description = "View for admin users")
+@DtoSchema(value = "user", description = "View for regular users")
 class TestClass2 {
     @Dto("admin")
-    @Dto("profile2")
+    @Dto("user")
     String name;
 }
 

@@ -3,7 +3,7 @@ package at.jkvn.dtosimplify.core.annotation;
 import java.lang.annotation.*;
 
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.FIELD})
+@Target(ElementType.FIELD)
 @Repeatable(Dto.Container.class)
 public @interface Dto {
     

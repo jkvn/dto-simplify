@@ -11,7 +11,6 @@ public class DtoMapper {
 
         classMetadata.getFieldsToView(profile).forEach((key, fieldMetadata) -> {
             try {
-                System.out.println(fieldMetadata.getFieldValue(source));
                 context.set(key, fieldMetadata.getFieldValue(source));
             } catch (IllegalAccessException e) {
                 throw new RuntimeException(e);
