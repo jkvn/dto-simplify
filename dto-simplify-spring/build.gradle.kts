@@ -11,4 +11,5 @@ repositories {
 }
 
 dependencies {
+    implementation("org.springframework.boot:spring-boot-autoconfigure:3.5.3")
 }
