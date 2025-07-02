@@ -12,4 +12,5 @@ public class DtoSimplifyProcessor {
         return new FeatureBuildItem(FEATURE);
     }
     
+    
 }

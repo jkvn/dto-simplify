@@ -2,7 +2,7 @@ package at.jkvn.dtosimplify.core.annotation;
 
 import java.lang.annotation.*;
 
-@Retention(RetentionPolicy.RUNTIME)
+@Retention(RetentionPolicy.CLASS)
 @Target(ElementType.TYPE)
 @Repeatable(DtoSchema.Container.class)
 public @interface DtoSchema {

@@ -3,52 +3,86 @@ package at.jkvn.dtosimplify.openapi.generation;
 import at.jkvn.dtosimplify.core.annotation.DtoSchema;
 import io.swagger.v3.oas.models.media.Schema;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import javax.annotation.processing.Filer;
+import javax.annotation.processing.Messager;
+import javax.tools.Diagnostic;
+import javax.tools.FileObject;
+import javax.tools.StandardLocation;
+import java.io.*;
+import java.util.*;
 
 public class DtoSchemaRegistry {
-    
-    private static final Map<String, Schema<?>> SCHEMA_REGISTRY = new ConcurrentHashMap<>();
-    
-    public static void registerSchema(Class<?> dtoClass) {
-        List<DtoSchema> schemaAnnotations = collectSchemaAnnotations(dtoClass);
-        if (schemaAnnotations.isEmpty()) return;
-        
-        schemaAnnotations.forEach(schemaAnnotation -> {
-            String view = schemaAnnotation.value();
-            String name = schemaAnnotation.name().isBlank() ? schemaAnnotation.name() : dtoClass.getSimpleName() + "_" + view;
-            
-            Schema<?> schema = SchemaBuilder.buildSchema(dtoClass, view);
-            if(!schemaAnnotation.description().isBlank()) {
-                schema.setDescription(schemaAnnotation.description());
+
+    public static Schema getSchema(String name) {
+        return loadSchemasFromMetaFile().get(name);
+    }
+
+    public static Map<String, Schema> getAllSchemas() {
+        return loadSchemasFromMetaFile();
+    }
+
+    public static Map<String, Schema> loadSchemasFromMetaFile() {
+        Map<String, Schema> schemas = new LinkedHashMap<>();
+
+        try (InputStream in = Thread.currentThread().getContextClassLoader()
+                .getResourceAsStream("META-INF/dtosimplify.schemas")) {
+
+            if (in == null) return schemas;
+
+            BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+            List<String> classNames = reader.lines()
+                    .map(String::trim)
+                    .filter(line -> !line.isEmpty())
+                    .toList();
+
+            for (String className : classNames) {
+                try {
+                    Class<?> clazz = Class.forName(className);
+
+                    if (clazz.isAnnotationPresent(DtoSchema.Container.class)) {
+                        DtoSchema.Container container = clazz.getAnnotation(DtoSchema.Container.class);
+                        for (DtoSchema annotation : container.value()) {
+                            String schemaName = annotation.name().isEmpty() ? clazz.getSimpleName() + "_" + annotation.value(): annotation.name();
+                            String description = annotation.description().isEmpty()
+                                    ? "Generated from " + clazz.getName()
+                                    : annotation.description();
+
+                            System.out.println(schemaName);
+                            Schema schema = new Schema()
+                                    .name(schemaName)
+                                    .description(description);
+
+                            schemas.put(schemaName, schema);
+                        }
+                    }
+
+                } catch (ClassNotFoundException e) {
+                    System.err.println("DTO class not found: " + className);
+                }
             }
-            
-            SCHEMA_REGISTRY.put(name, schema);
-        });
-    }
-    
-    public static Schema<?> getSchema(String name) {
-        return SCHEMA_REGISTRY.get(name);
-    }
-    
-    public static Map<String, Schema<?>> getAllSchemas() {
-        return Map.copyOf(SCHEMA_REGISTRY);
-    }
-    
-    public static void clear() {
-        SCHEMA_REGISTRY.clear();
-    }
-    
-    private static List<DtoSchema> collectSchemaAnnotations(Class<?> dtoClass) {
-        List<DtoSchema> result = new ArrayList<>();
-        if (dtoClass.isAnnotationPresent(DtoSchema.class)) {
-            result.add(dtoClass.getAnnotation(DtoSchema.class));
+
+        } catch (Exception e) {
+            throw new RuntimeException("Error while reading dtosimplify.schemas", e);
         }
-        if (dtoClass.isAnnotationPresent(DtoSchema.Container.class)) {
-            result.addAll(List.of(dtoClass.getAnnotation(DtoSchema.Container.class).value()));
+
+        return schemas;
+    }
+
+    public static void writeMetaInfFile(Collection<String> classNames, Filer filer, Messager messager) {
+        try {
+            FileObject file = filer.createResource(StandardLocation.CLASS_OUTPUT,
+                    "", "META-INF/dtosimplify.schemas");
+
+            try (Writer writer = file.openWriter()) {
+                for (String clazz : classNames) {
+                    writer.write(clazz + "\n");
+                    messager.printMessage(Diagnostic.Kind.NOTE, "Registered DTO schema: " + clazz);
+                }
+            }
+
+        } catch (IOException e) {
+            messager.printMessage(Diagnostic.Kind.ERROR,
+                    "Failed to write META-INF/dtosimplify.schemas: " + e.getMessage());
         }
-        return result;
     }
 }
