@@ -13,7 +13,7 @@ public class DtoMapper {
 
         classMetadata.getFieldsToView(profile).forEach((key, fieldMetadata) -> {
             try {
-                Object fieldValue = fieldMetadata.getFieldValue(source);
+                Object fieldValue = fieldMetadata.getFieldValue(source, profile);
 
                 if (fieldValue == null) {
                     context.set(key, null);

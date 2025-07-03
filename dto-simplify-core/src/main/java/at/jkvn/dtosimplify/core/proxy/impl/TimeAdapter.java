@@ -1,31 +1,39 @@
 package at.jkvn.dtosimplify.core.proxy.impl;
 
 import at.jkvn.dtosimplify.core.proxy.TypeAdapter;
+import io.swagger.v3.oas.models.media.StringSchema;
 import io.swagger.v3.oas.models.media.Schema;
 
+import java.time.*;
+import java.util.HashMap;
+import java.util.Map;
+
 public class TimeAdapter implements TypeAdapter {
+
+    private static final Map<Class<?>, String> formatMap = new HashMap<>();
+
+    static {
+        formatMap.put(LocalDate.class, "date");
+        formatMap.put(LocalDateTime.class, "date-time-local");
+        formatMap.put(LocalTime.class, "time");
+        formatMap.put(OffsetTime.class, "time-offset");
+        formatMap.put(ZonedDateTime.class, "date-time");
+        formatMap.put(Instant.class, "instant");
+    }
+
     @Override
     public boolean support(Class<?> type) {
-        return type == java.time.LocalTime.class || type == java.time.OffsetTime.class;
+        return formatMap.containsKey(type);
     }
 
     @Override
     public Schema<?> toOpenApiSchema(Class<?> type) {
-        if (type == java.time.LocalTime.class) {
-            return new Schema<>().type("string").format("time");
-        } else if (type == java.time.OffsetTime.class) {
-            return new Schema<>().type("string").format("time-offset");
-        }
-        return null;
+        String format = formatMap.get(type);
+        return new StringSchema().format(format);
     }
-
+    
     @Override
     public Object toJsonValue(Object value, String profile) {
-        if (value instanceof java.time.LocalTime) {
-            return ((java.time.LocalTime) value).toString();
-        } else if (value instanceof java.time.OffsetTime) {
-            return ((java.time.OffsetTime) value).toString();
-        }
-        return value;
-    } 
+        return value.toString();
+    }
 }

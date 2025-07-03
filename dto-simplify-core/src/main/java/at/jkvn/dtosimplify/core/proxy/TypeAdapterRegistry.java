@@ -1,5 +1,6 @@
 package at.jkvn.dtosimplify.core.proxy;
 
+import at.jkvn.dtosimplify.core.proxy.impl.TimeAdapter;
 import at.jkvn.dtosimplify.core.proxy.impl.UuidAdapter;
 
 import java.util.ArrayList;
@@ -7,11 +8,12 @@ import java.util.List;
 import java.util.Optional;
 
 public class TypeAdapterRegistry {
+    private static final List<TypeAdapter> typeAdapters = new ArrayList<>();
+    
     static {
+        TypeAdapterRegistry.registerTypeAdapter(new TimeAdapter());
         TypeAdapterRegistry.registerTypeAdapter(new UuidAdapter());
     }
-    
-    private static List<TypeAdapter> typeAdapters = new ArrayList<>();
     
     public static void registerTypeAdapter(TypeAdapter typeAdapter) {
         if (typeAdapter == null) {
