@@ -11,6 +11,9 @@ import javax.tools.FileObject;
 import javax.tools.StandardLocation;
 import java.io.*;
 import java.lang.reflect.Field;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 
 public class DtoSchemaRegistry {
@@ -63,7 +66,8 @@ public class DtoSchemaRegistry {
                             for (Field field : clazz.getDeclaredFields()) {
                                 for (Dto dto : field.getAnnotationsByType(Dto.class)) {
                                     if (dto.value().equals(annotation.value())) {
-                                        schema.addProperties(field.getName(), new Schema<>());
+                                        Schema<?> fieldSchema = getSchemaFromJavaType(field.getType());
+                                        schema.addProperties(field.getName(), fieldSchema);
                                         break;
                                     }
                                 }
@@ -83,6 +87,35 @@ public class DtoSchemaRegistry {
         }
 
         return schemas;
+    }
+
+    private static Schema<?> getSchemaFromJavaType(Class<?> fieldType) {
+        if (fieldType.equals(String.class)) {
+            return new Schema<>().type("string");
+        } else if (fieldType.isPrimitive() ||
+                fieldType.equals(Integer.class) ||
+                fieldType.equals(Long.class) ||
+                fieldType.equals(Short.class) ||
+                fieldType.equals(Byte.class)) {
+            return new Schema<>().type("integer");
+        } else if (fieldType.equals(Boolean.class) || fieldType.isAssignableFrom(boolean.class)) {
+            return new Schema<>().type("boolean");
+        } else if (fieldType.equals(Double.class) ||
+                fieldType.equals(Float.class) ||
+                fieldType.equals(BigDecimal.class)) {
+            return new Schema<>().type("number");
+        } else if (fieldType.equals(LocalDate.class)) {
+            return new Schema<>().type("string").format("date");
+        } else if (fieldType.equals(LocalDateTime.class) || fieldType.equals(Date.class)) {
+            return new Schema<>().type("string").format("date-time");
+        } else if (Collection.class.isAssignableFrom(fieldType)) {
+            Schema<?> itemsSchema = new Schema<>().type("string");
+            return new Schema<>().type("array").items(itemsSchema);
+        } else if (Map.class.isAssignableFrom(fieldType)) {
+            return new Schema<>().type("object").additionalProperties(new Schema<>());
+        } else {
+            return new Schema<>().$ref("#/components/schemas/" + fieldType.getSimpleName());
+        }
     }
 
     public static void writeMetaInfFile(Collection<String> classNames, Filer filer, Messager messager) {

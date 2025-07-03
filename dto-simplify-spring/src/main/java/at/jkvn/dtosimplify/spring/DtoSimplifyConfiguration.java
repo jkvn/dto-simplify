@@ -1,4 +1,4 @@
-package at.jkvn.dtosimplify.processor;
+package at.jkvn.dtosimplify.spring;
 
 import at.jkvn.dtosimplify.openapi.generation.DtoSchemaRegistry;
 import io.swagger.v3.oas.models.media.Schema;
