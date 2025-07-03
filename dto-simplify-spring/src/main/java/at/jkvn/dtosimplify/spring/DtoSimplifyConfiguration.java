@@ -19,7 +19,7 @@ public class DtoSimplifyConfiguration {
             Map<String, Schema> schemas = DtoSchemaRegistry.loadSchemasFromMetaFile();
 
             if (openApi.getComponents() != null) {
-                openApi.getComponents().setSchemas(schemas);
+                schemas.forEach((name, schema) -> openApi.getComponents().addSchemas(name, schema));
             } else {
                 System.err.println("OpenAPI components not initialized");
             }

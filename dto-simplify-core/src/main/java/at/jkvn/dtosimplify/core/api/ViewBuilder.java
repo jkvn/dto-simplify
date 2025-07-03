@@ -4,9 +4,9 @@ import at.jkvn.dtosimplify.core.mapping.DtoMapper;
 import at.jkvn.dtosimplify.core.mapping.DtoMappingContext;
 
 import java.util.List;
+import java.util.Map;
 
 public class ViewBuilder {
-    
     private final Object source;
     private String profile = "DEFAULT";
 
@@ -19,7 +19,7 @@ public class ViewBuilder {
         return this;
     }
 
-    public Object map() {
+    public Map<String, Object> map() {
         DtoMappingContext context = DtoMapper.map(source, profile);
         return context.getFields();
     }

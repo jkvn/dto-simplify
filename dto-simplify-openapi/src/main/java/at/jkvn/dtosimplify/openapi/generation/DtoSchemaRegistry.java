@@ -2,7 +2,9 @@ package at.jkvn.dtosimplify.openapi.generation;
 
 import at.jkvn.dtosimplify.core.annotation.Dto;
 import at.jkvn.dtosimplify.core.annotation.DtoSchema;
-import io.swagger.v3.oas.models.media.Schema;
+import at.jkvn.dtosimplify.core.metadata.ClassMetadata;
+import at.jkvn.dtosimplify.core.metadata.DtoMetadataRegistry;
+import io.swagger.v3.oas.models.media.*;
 
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.Messager;
@@ -27,6 +29,7 @@ public class DtoSchemaRegistry {
     }
 
     public static Map<String, Schema> loadSchemasFromMetaFile() {
+        System.out.println("Loading DTO schemas from META-INF/dtosimplify.schemas");
         Map<String, Schema> schemas = new LinkedHashMap<>();
 
         try (InputStream in = Thread.currentThread()
@@ -46,37 +49,7 @@ public class DtoSchemaRegistry {
             for (String className : classNames) {
                 try {
                     Class<?> clazz = Class.forName(className);
-
-                    if (clazz.isAnnotationPresent(DtoSchema.Container.class)) {
-                        DtoSchema.Container container = clazz.getAnnotation(DtoSchema.Container.class);
-
-                        for (DtoSchema annotation : container.value()) {
-                            String schemaName = annotation.name().isEmpty()
-                                    ? clazz.getSimpleName() + "_" + annotation.value()
-                                    : annotation.name();
-
-                            String description = annotation.description().isEmpty()
-                                    ? "Generated from " + clazz.getName()
-                                    : annotation.description();
-
-                            Schema<?> schema = new Schema<>()
-                                    .name(schemaName)
-                                    .description(description);
-
-                            for (Field field : clazz.getDeclaredFields()) {
-                                for (Dto dto : field.getAnnotationsByType(Dto.class)) {
-                                    if (dto.value().equals(annotation.value())) {
-                                        Schema<?> fieldSchema = getSchemaFromJavaType(field.getType());
-                                        schema.addProperties(field.getName(), fieldSchema);
-                                        break;
-                                    }
-                                }
-                            }
-
-                            schemas.put(schemaName, schema);
-                        }
-                    }
-
+                    processDtoSchemaAnnotations(clazz, schemas);
                 } catch (ClassNotFoundException e) {
                     System.err.println("DTO class not found: " + className);
                 }
@@ -89,32 +62,80 @@ public class DtoSchemaRegistry {
         return schemas;
     }
 
-    private static Schema<?> getSchemaFromJavaType(Class<?> fieldType) {
-        if (fieldType.equals(String.class)) {
-            return new Schema<>().type("string");
-        } else if (fieldType.isPrimitive() ||
-                fieldType.equals(Integer.class) ||
-                fieldType.equals(Long.class) ||
-                fieldType.equals(Short.class) ||
-                fieldType.equals(Byte.class)) {
-            return new Schema<>().type("integer");
-        } else if (fieldType.equals(Boolean.class) || fieldType.isAssignableFrom(boolean.class)) {
-            return new Schema<>().type("boolean");
-        } else if (fieldType.equals(Double.class) ||
-                fieldType.equals(Float.class) ||
-                fieldType.equals(BigDecimal.class)) {
-            return new Schema<>().type("number");
-        } else if (fieldType.equals(LocalDate.class)) {
-            return new Schema<>().type("string").format("date");
-        } else if (fieldType.equals(LocalDateTime.class) || fieldType.equals(Date.class)) {
-            return new Schema<>().type("string").format("date-time");
-        } else if (Collection.class.isAssignableFrom(fieldType)) {
-            Schema<?> itemsSchema = new Schema<>().type("string");
-            return new Schema<>().type("array").items(itemsSchema);
-        } else if (Map.class.isAssignableFrom(fieldType)) {
-            return new Schema<>().type("object").additionalProperties(new Schema<>());
+    private static void processDtoSchemaAnnotations(Class<?> clazz, Map<String, Schema> schemas) {
+        DtoSchema[] annotations;
+
+        if (clazz.isAnnotationPresent(DtoSchema.Container.class)) {
+            annotations = clazz.getAnnotation(DtoSchema.Container.class).value();
+        } else if (clazz.isAnnotationPresent(DtoSchema.class)) {
+            annotations = new DtoSchema[]{ clazz.getAnnotation(DtoSchema.class) };
         } else {
-            return new Schema<>().$ref("#/components/schemas/" + fieldType.getSimpleName());
+            return;
+        }
+
+        for (DtoSchema annotation : annotations) {
+            String profile = annotation.value();
+            String schemaName = annotation.name().isEmpty()
+                    ? clazz.getSimpleName() + "_" + profile
+                    : annotation.name();
+
+            String description = annotation.description().isEmpty()
+                    ? "Generated from " + clazz.getName()
+                    : annotation.description();
+
+            System.out.println("Generating schema: " + schemaName);
+
+            ObjectSchema schema = (ObjectSchema) new ObjectSchema()
+                    .name(schemaName)
+                    .description(description);
+
+            for (Field field : clazz.getDeclaredFields()) {
+                for (Dto dto : field.getAnnotationsByType(Dto.class)) {
+                    if (dto.value().equals(profile)) {
+                        Schema<?> fieldSchema = getSchemaFromJavaType(field.getType(), profile);
+                        schema.addProperty(field.getName(), fieldSchema);
+                        break;
+                    }
+                }
+            }
+
+            schemas.put(schemaName, schema);
+        }
+    }
+
+    private static Schema<?> getSchemaFromJavaType(Class<?> fieldType, String profile) {
+        if (fieldType.equals(String.class)) {
+            return new StringSchema();
+        } else if (fieldType.isPrimitive()
+                || fieldType.equals(Integer.class)
+                || fieldType.equals(Long.class)
+                || fieldType.equals(Short.class)
+                || fieldType.equals(Byte.class)) {
+            return new IntegerSchema();
+        } else if (fieldType.equals(Boolean.class) || fieldType.equals(boolean.class)) {
+            return new BooleanSchema();
+        } else if (fieldType.equals(Double.class)
+                || fieldType.equals(Float.class)
+                || fieldType.equals(BigDecimal.class)) {
+            return new NumberSchema();
+        } else if (fieldType.equals(LocalDate.class)) {
+            return new StringSchema().format("date");
+        } else if (fieldType.equals(LocalDateTime.class) || fieldType.equals(Date.class)) {
+            return new StringSchema().format("date-time");
+        } else if (Collection.class.isAssignableFrom(fieldType)) {
+            return new ArraySchema().items(new StringSchema());
+        } else if (Map.class.isAssignableFrom(fieldType)) {
+            return new ObjectSchema().additionalProperties(new StringSchema());
+        } else {
+            try {
+                ClassMetadata nestedMetadata = DtoMetadataRegistry.getMetadata(fieldType);
+                if (!nestedMetadata.getFieldsToView(profile).isEmpty()) {
+                    return new Schema<>().$ref("#/components/schemas/" + fieldType.getSimpleName() + "_" + profile);
+                }
+            } catch (Exception ignored) {
+            }
+
+            return new ObjectSchema();
         }
     }
 

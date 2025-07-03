@@ -4,25 +4,32 @@ package com.example.entity;
 import at.jkvn.dtosimplify.core.annotation.Dto;
 import at.jkvn.dtosimplify.core.annotation.DtoSchema;
 
-@DtoSchema(value = "public", name = "UserDto_Public", description = "Public user schema")
-@DtoSchema(value = "admin", name = "UserDto_Admin", description = "Admin user schema")
+import java.util.List;
+
+@DtoSchema(value = "admin", description = "Admin user schema")
 public class User {
     @Dto("admin")
-    @Dto("public")
     private String username;
     @Dto("admin")
-    private String internalId;
+    private Test testData;
+    @Dto("admin")
+    private List<Test> testList = List.of(
+            new Test("test1"),
+            new Test("test2")
+    );
+    @Dto("admin")
+    private List<String> strings = List.of("a", "b", "c");
 
-    public User(String username, String internalId) {
+    public User(String username, Test testData) {
         this.username = username;
-        this.internalId = internalId;
+        this.testData = testData;
     }
 
     public String getUsername() {
         return username;
     }
 
-    public String getInternalId() {
-        return internalId;
+    public Test getTestData() {
+        return testData;
     }
 }
