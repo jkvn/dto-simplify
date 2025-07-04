@@ -1,15 +1,16 @@
-name: Publish to GitHub Packages
+name: Publish and Create GitHub Release
 
 on:
-  release:
-    types: [published]
+  push:
+    tags:
+      - '[0-9]+.[0-9]+.[0-9]+*'
 
 jobs:
-  publish:
+  build-and-release:
     runs-on: ubuntu-latest
 
     permissions:
-      contents: read
+      contents: write   # wichtig fürs Release
       packages: write
 
     steps:
@@ -22,10 +23,29 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - name: Configure Gradle
-        run: ./gradlew --version
+      - name: Build and publish JARs
+        run: ./gradlew publish build
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Publish all modules to GitHub Packages
-        run: ./gradlew publish
+      - name: Find all JAR files
+        run: |
+          mkdir artifacts
+          find . -name "*.jar" -not -path "*/build/tmp/*" -exec cp {} artifacts/ \;
+
+      - name: Create GitHub Release and upload JARs
+        uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/*.jar
+          body: |
+            Maven dependency:
+
+            ```xml
+            <dependency>
+              <groupId>at.jkvn.dtosimplify</groupId>
+              <artifactId>dto-simplify-core</artifactId>
+              <version>${{ github.ref_name }}</version>
+            </dependency>
+            ```
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
