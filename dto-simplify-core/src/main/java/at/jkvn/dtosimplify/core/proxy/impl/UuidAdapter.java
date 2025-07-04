@@ -13,7 +13,7 @@ public class UuidAdapter implements TypeAdapter {
     }
 
     @Override
-    public Schema<?> toOpenApiSchema(Class<?> type) {
+    public Schema<?> toOpenApiSchema(Class<?> type, String profile) {
         return new StringSchema().format("uuid");
     }
 

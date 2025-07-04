@@ -1,6 +1,6 @@
 # DTO-Simplify
 
-**DTO-Simplify** is a lightweight Java library for Spring and Quarkus that simplifies the creation and management of DTOs – with a primary focus on **API responses**.
+**DTO-Simplify** is a lightweight Java library for **Spring** and **Quarkus (In Development)** that simplifies the creation and management of DTOs – with a primary focus on **API responses**.
 
 The goal is to eliminate the need for verbose DTO classes by letting you declare **which fields should be visible in which view** (e.g., `public`, `admin`, `self`) directly in your model classes.
 
@@ -39,10 +39,10 @@ class User {
 
 ```java
 class User {
-    @Dto({"public", "admin"})
+    @Dtos({"public", "admin"})
     private String username;
 
-    @Dto({"admin"}) -->  @Dto("admin")
+    @Dtos({"admin"}) -->  @Dto("admin")
     private String internalId;
 }
 ```
@@ -69,7 +69,6 @@ class User {
 ```java
 User user = new User("username", "internalId");
 
-String json = DtoSimplify.view("public").asJson(user);
 Map<String, Object> map = DtoSimplify.view("admin").asMap(user);
 ```
 
@@ -88,7 +87,8 @@ If enabled, DtoSimplify can generate a distinct OpenAPI schema per view:
 Compatible with SpringDoc, Swagger UI and Quarkus OpenAPI extensions.
 
 ```java
-@DtoSchema("UserDto")
+@DtoSchema(value = "admin", description = "Admin view of User")
+@DtoSchema(value = "public", description = "Admin view of User")
 @DtoViews({
         @DtoView("public", {"username"}),
         @DtoView("admin", {"username", "internalId"})
@@ -96,6 +96,17 @@ Compatible with SpringDoc, Swagger UI and Quarkus OpenAPI extensions.
 class User {
     private String username;
     private String internalId;
+}
+
+
+@GetMapping("/user/admin")
+@SchemaResponse(variants = {
+        @SchemaVariant(dto = User.class, profile = "admin"),
+        @SchemaVariant(dto = User.class, profile = "public"),
+})
+public Object getAdminUser() {
+    User user = new User("username", "internalId");
+    return DtoSimplify.view(user).as("admin").map();
 }
 ```
 
@@ -150,6 +161,16 @@ Goals:
 > 🚧 This feature is **experimental** and will evolve.
 
 ---
+
+## 🚧 Todo
+- [ ] Quarkus support
+- [ ] Inline request definition (beta)
+- [ ] More OpenAPI integration
+- [ ] More examples and documentation
+- [ ] tests and bug fixes
+- [ ] Performance optimizations
+- [ ] Error handling improvements
+- [ ] @DtoViews and @Dtos annotations
 
 ## 📄 License
 

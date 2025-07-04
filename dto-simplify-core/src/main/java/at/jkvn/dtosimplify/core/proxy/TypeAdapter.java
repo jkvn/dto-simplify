@@ -6,7 +6,7 @@ public interface TypeAdapter {
     
     boolean support(Class<?> type);
     
-    Schema<?> toOpenApiSchema(Class<?> type);
+    Schema<?> toOpenApiSchema(Class<?> type, String profile);
     
     default Object toJsonValue(Object value, String profile) {
         return value;

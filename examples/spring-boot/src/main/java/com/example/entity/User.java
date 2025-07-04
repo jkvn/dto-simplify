@@ -7,8 +7,10 @@ import at.jkvn.dtosimplify.core.annotation.DtoSchema;
 import java.util.List;
 
 @DtoSchema(value = "admin", description = "Admin user schema")
+@DtoSchema(value = "user", description = "Admin user schema")
 public class User {
     @Dto("admin")
+    @Dto("user")
     private String username;
     @Dto("admin")
     private Test testData;

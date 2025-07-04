@@ -1,6 +1,8 @@
 package com.example.controller;
 
-import at.jkvn.dtosimplify.core.api.ViewBuilder;
+import at.jkvn.dtosimplify.core.annotation.SchemaResponse;
+import at.jkvn.dtosimplify.core.annotation.SchemaVariant;
+import at.jkvn.dtosimplify.core.api.DtoSimplify;
 import com.example.entity.Test;
 import com.example.entity.User;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -8,10 +10,14 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 public class UserController {
-    
+
     @GetMapping("/user/admin")
+    @SchemaResponse(variants = {
+            @SchemaVariant(dto = User.class, profile = "admin"),
+            @SchemaVariant(dto = User.class, profile = "user"),
+    })
     public Object getAdminUser() {
         User user = new User("kevin", new Test("internalId123"));
-        return new ViewBuilder(user).as("admin").map();
+        return DtoSimplify.view(user).as("user").map();
     }
 }

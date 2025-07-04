@@ -4,6 +4,7 @@ import at.jkvn.dtosimplify.core.annotation.Dto;
 import at.jkvn.dtosimplify.core.annotation.DtoSchema;
 import at.jkvn.dtosimplify.core.metadata.ClassMetadata;
 import at.jkvn.dtosimplify.core.metadata.DtoMetadataRegistry;
+import at.jkvn.dtosimplify.core.proxy.TypeAdapterRegistry;
 import io.swagger.v3.oas.models.media.*;
 
 import javax.annotation.processing.Filer;
@@ -14,8 +15,6 @@ import javax.tools.StandardLocation;
 import java.io.*;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.*;
 
 public class DtoSchemaRegistry {
@@ -82,8 +81,6 @@ public class DtoSchemaRegistry {
                     ? "Generated from " + clazz.getName()
                     : annotation.description();
 
-            System.out.println("Generating schema: " + schemaName);
-
             ObjectSchema schema = (ObjectSchema) new ObjectSchema()
                     .name(schemaName)
                     .description(description);
@@ -103,6 +100,13 @@ public class DtoSchemaRegistry {
     }
 
     private static Schema<?> getSchemaFromJavaType(Class<?> fieldType, String profile) {
+        Optional<Schema<?>> optionalSchema = TypeAdapterRegistry.findTypeAdapter(fieldType)
+                .map(adapter -> adapter.toOpenApiSchema(fieldType, profile));
+
+        return optionalSchema.orElseGet(() -> getFallbackSchema(fieldType, profile));
+    }
+
+    private static Schema<?> getFallbackSchema(Class<?> fieldType, String profile) {
         if (fieldType.equals(String.class)) {
             return new StringSchema();
         } else if (fieldType.isPrimitive()
@@ -117,12 +121,8 @@ public class DtoSchemaRegistry {
                 || fieldType.equals(Float.class)
                 || fieldType.equals(BigDecimal.class)) {
             return new NumberSchema();
-        } else if (fieldType.equals(LocalDate.class)) {
-            return new StringSchema().format("date");
-        } else if (fieldType.equals(LocalDateTime.class) || fieldType.equals(Date.class)) {
-            return new StringSchema().format("date-time");
         } else if (Collection.class.isAssignableFrom(fieldType)) {
-            return new ArraySchema().items(new StringSchema());
+            return new ArraySchema().items(new StringSchema()); //Todo: handle generic types
         } else if (Map.class.isAssignableFrom(fieldType)) {
             return new ObjectSchema().additionalProperties(new StringSchema());
         } else {
@@ -133,7 +133,7 @@ public class DtoSchemaRegistry {
                 }
             } catch (Exception ignored) {
             }
-
+            
             return new ObjectSchema();
         }
     }

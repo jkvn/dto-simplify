@@ -27,7 +27,7 @@ public class TimeAdapter implements TypeAdapter {
     }
 
     @Override
-    public Schema<?> toOpenApiSchema(Class<?> type) {
+    public Schema<?> toOpenApiSchema(Class<?> type, String profile) {
         String format = formatMap.get(type);
         return new StringSchema().format(format);
     }

@@ -9,8 +9,7 @@ import java.util.Arrays;
 import java.util.Optional;
 
 public record FieldMetadata(Field field) {
-
-    //Maybe remove profile parameter
+    
     public Object getFieldValue(Object source, String profile) throws IllegalAccessException {
         field().setAccessible(true);
         if (source == null) {
