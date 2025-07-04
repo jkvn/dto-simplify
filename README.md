@@ -1,5 +1,9 @@
 # DTO-Simplify
 
+
+> ⚠️ **This library is in an early development phase. It is not production-ready yet and its API may change. Use with caution.**
+
+
 **DTO-Simplify** is a lightweight Java library for **Spring** and **Quarkus (In Development)** that simplifies the creation and management of DTOs – with a primary focus on **API responses**.
 
 The goal is to eliminate the need for verbose DTO classes by letting you declare **which fields should be visible in which view** (e.g., `public`, `admin`, `self`) directly in your model classes.
