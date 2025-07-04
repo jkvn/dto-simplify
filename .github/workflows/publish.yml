@@ -36,7 +36,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           body: |
-            Mavenm Spring dependency:
+            Maven Spring dependency:
 
             ```xml
             <dependency>
@@ -46,7 +46,7 @@ jobs:
             </dependency>
             ```
             
-            Mavenm Quarkus dependency:
+            Maven Quarkus dependency:
             **In Progress**
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
