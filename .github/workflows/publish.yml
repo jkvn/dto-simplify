@@ -32,14 +32,17 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           body: |
-            Maven dependency:
+            Mavenm Spring dependency:
 
             ```xml
             <dependency>
               <groupId>at.jkvn.dtosimplify</groupId>
-              <artifactId>dto-simplify-core</artifactId>
+              <artifactId>dto-simplify-spring</artifactId>
               <version>${{ github.ref_name }}</version>
             </dependency>
             ```
+            
+            Mavenm Quarkus dependency:
+            **In Progress**
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
