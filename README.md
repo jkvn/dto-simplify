@@ -69,7 +69,7 @@ class User {
 ```java
 User user = new User("username", "internalId");
 
-Map<String, Object> map = DtoSimplify.view("admin").asMap(user);
+Map<String, Object> map = DtoSimplify.view("admin").map(user);
 ```
 
 Works with single objects, collections, and nested DTOs.
@@ -170,6 +170,7 @@ Goals:
 - [ ] tests and bug fixes
 - [ ] Performance optimizations
 - [ ] Error handling improvements
+- [ ] Handle list of DTOs
 - [ ] @DtoViews and @Dtos annotations
 
 ## 📄 License

@@ -9,18 +9,17 @@ import java.util.Arrays;
 import java.util.Optional;
 
 public record FieldMetadata(Field field) {
-    
+
     public Object getFieldValue(Object source, String profile) throws IllegalAccessException {
-        field().setAccessible(true);
-        if (source == null) {
-            return null;
-        }
-        
+        field.setAccessible(true);
+        if (source == null) return null;
+
         Optional<TypeAdapter> optionalTypeAdapter = TypeAdapterRegistry.findTypeAdapter(field.getType());
         if (optionalTypeAdapter.isPresent()) {
             TypeAdapter typeAdapter = optionalTypeAdapter.get();
             return typeAdapter.toJsonValue(field.get(source), profile);
         }
+        
         return field.get(source);
     }
 
@@ -30,6 +29,6 @@ public record FieldMetadata(Field field) {
     }
 
     public String getName() {
-        return field().getName();
+        return field.getName();
     }
 }
