@@ -22,6 +22,13 @@ public class TypeAdapterRegistry {
         typeAdapters.add(typeAdapter);
     }
     
+    public static void unregisterTypeAdapter(TypeAdapter typeAdapter) {
+        if (typeAdapter == null) {
+            throw new IllegalArgumentException("TypeAdapter cannot be null");
+        }
+        typeAdapters.remove(typeAdapter);
+    }
+    
     public static Optional<TypeAdapter> findTypeAdapter(Class<?> clazz) {
         return typeAdapters.stream()
                 .filter(typeAdapter -> typeAdapter.support(clazz))

@@ -1,8 +1,8 @@
 package at.jkvn.dtosimplify.core.proxy.impl;
 
 import at.jkvn.dtosimplify.core.proxy.TypeAdapter;
-import io.swagger.v3.oas.models.media.StringSchema;
 import io.swagger.v3.oas.models.media.Schema;
+import io.swagger.v3.oas.models.media.StringSchema;
 
 import java.time.*;
 import java.util.HashMap;
@@ -34,6 +34,7 @@ public class TimeAdapter implements TypeAdapter {
     
     @Override
     public Object toJsonValue(Object value, String profile) {
+        //Todo: Implement profile-specific formatting
         return value.toString();
     }
 }

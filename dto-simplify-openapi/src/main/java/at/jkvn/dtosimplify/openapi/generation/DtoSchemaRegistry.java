@@ -29,7 +29,6 @@ public class DtoSchemaRegistry {
     }
 
     public static Map<String, Schema> loadSchemasFromMetaFile() {
-        System.out.println("Loading DTO schemas from META-INF/dtosimplify.schemas");
         Map<String, Schema> schemas = new LinkedHashMap<>();
 
         try (InputStream in = Thread.currentThread()

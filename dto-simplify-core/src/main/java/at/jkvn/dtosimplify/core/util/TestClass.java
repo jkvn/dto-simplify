@@ -39,7 +39,6 @@ class TestClass2 {
     
     @Dto("admin")
     TestClass3 testClass3;
-    
 
 }
 
@@ -49,8 +48,6 @@ class TestClass3 {
     String name;
     @Dto("admin")
     TestClass4 testClass4;
-    
-    
 }
 
 @DtoSchema(value = "admin", description = "View for admin users")
