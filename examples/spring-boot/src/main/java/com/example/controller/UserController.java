@@ -1,7 +1,7 @@
 package com.example.controller;
 
-import at.jkvn.dtosimplify.core.annotation.SchemaResponse;
-import at.jkvn.dtosimplify.core.annotation.SchemaVariant;
+import at.jkvn.dtosimplify.core.annotation.schema.SchemaResponse;
+import at.jkvn.dtosimplify.core.annotation.schema.SchemaVariant;
 import at.jkvn.dtosimplify.core.api.DtoSimplify;
 import com.example.entity.Test;
 import com.example.entity.User;

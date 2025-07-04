@@ -1,6 +1,6 @@
 package at.jkvn.dtosimplify.spring;
 
-import at.jkvn.dtosimplify.core.annotation.SchemaResponse;
+import at.jkvn.dtosimplify.core.annotation.schema.SchemaResponse;
 import at.jkvn.dtosimplify.openapi.generation.DtoSchemaRegistry;
 import io.swagger.v3.oas.models.media.Content;
 import io.swagger.v3.oas.models.media.MediaType;

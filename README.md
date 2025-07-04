@@ -35,20 +35,6 @@ class User {
 
 ---
 
-### 🧠 Alternative: Single annotation with multiple views
-
-```java
-class User {
-    @Dtos({"public", "admin"})
-    private String username;
-
-    @Dtos({"admin"}) -->  @Dto("admin")
-    private String internalId;
-}
-```
-
----
-
 ### 🗂️ Alternative: Central view mapping via `@DtoViews`
 
 ```java
@@ -141,11 +127,35 @@ Instead of creating separate request classes, you can define expected request fi
 ```java
 @PostMapping("/register")
 public ResponseEntity<?> register(
-    @DtoRequest({
-        @DtoField(name = "username", required = true, max = 16),
-        @DtoField(name = "email", required = true),
-        @DtoField(name = "password", required = true, min = 6)
-    }) DtoSimplifyRequest req
+        @DtoRequest({
+                @DtoRequestProfile(name = "register_email", fields = {
+                        @DtoField(name = "email", required = true),
+                        @DtoField(name = "password", required = true, min = 6)
+                }),
+                @DtoRequestProfile(name = "register_username", fields = {
+                        @DtoField(name = "username", required = true, max = 16),
+                        @DtoField(name = "password", required = true, min = 6)
+                })
+        }) DtoSimplifyRequest req
+) {
+    String username = req.get("username");
+    ...
+}
+```
+
+```java
+@PostMapping("/register")
+public ResponseEntity<?> register(
+        @DtoRequest({
+                @DtoRequestProfile({
+                        @DtoField(name = "email", required = true),
+                        @DtoField(name = "password", required = true, min = 6)
+                }),
+                @DtoRequestProfile({
+                        @DtoField(name = "username", required = true, max = 16),
+                        @DtoField(name = "password", required = true, min = 6)
+                })
+        }) DtoSimplifyRequest req
 ) {
     String username = req.get("username");
     ...
@@ -163,15 +173,15 @@ Goals:
 ---
 
 ## 🚧 Todo
+- [x] Handle list of DTOs
+- [x] @DtoViews annotations
+- [x] More OpenAPI integration (Lists)
 - [ ] Quarkus support
 - [ ] Inline request definition (beta)
-- [ ] More OpenAPI integration
 - [ ] More examples and documentation
 - [ ] tests and bug fixes
 - [ ] Performance optimizations
 - [ ] Error handling improvements
-- [ ] Handle list of DTOs
-- [ ] @DtoViews and @Dtos annotations
 
 ## 📄 License
 

@@ -1,6 +1,8 @@
 package at.jkvn.dtosimplify.core;
 
-import at.jkvn.dtosimplify.core.annotation.Dto;
+import at.jkvn.dtosimplify.core.annotation.response.Dto;
+import at.jkvn.dtosimplify.core.annotation.response.DtoView;
+import at.jkvn.dtosimplify.core.annotation.response.DtoViews;
 import at.jkvn.dtosimplify.core.api.DtoSimplify;
 import org.junit.jupiter.api.Test;
 
@@ -46,6 +48,37 @@ class DtoSimplifyTest {
             this.address = address;
         }
     }
+    
+    @DtoViews({
+            @DtoView(value = "public", include = {"username"}),
+            @DtoView(value = "admin", include = {"username", "internalId", "address"})
+    })
+    static class ViewUser {
+        private String username;
+        private String internalId;
+        private ViewAddress address;
+
+        public ViewUser(String username, String internalId, ViewAddress address) {
+            this.username = username;
+            this.internalId = internalId;
+            this.address = address;
+        }
+    }
+
+    @DtoViews({
+            @DtoView(value = "public", include = {"city"}),
+            @DtoView(value = "admin", include = {"city", "street"})
+    })
+    static class ViewAddress {
+        private String city;
+        private String street;
+
+        public ViewAddress(String city, String street) {
+            this.city = city;
+            this.street = street;
+        }
+    }
+    
 
     @Test
     void shouldIncludeOnlyPublicFields() {
@@ -133,6 +166,32 @@ class DtoSimplifyTest {
         assertTrue(result.containsKey("internalId"));
         assertNull(result.get("internalId"));
     }
+
+    @Test
+    void shouldRespectDtoViews_Public() {
+        ViewUser user = new ViewUser("lara", "hidden", new ViewAddress("Graz", "Hauptstraße 1"));
+        Map<String, Object> result = asMap(user, "public");
+
+        assertEquals(1, result.size());
+        assertEquals("lara", result.get("username"));
+        assertFalse(result.containsKey("internalId"));
+        assertFalse(result.containsKey("address"));
+    }
+
+    @Test
+    void shouldRespectDtoViews_Admin_WithNested() {
+        ViewUser user = new ViewUser("max", "admin-id", new ViewAddress("Linz", "Straße 9"));
+        Map<String, Object> result = asMap(user, "admin");
+
+        assertEquals("max", result.get("username"));
+        assertEquals("admin-id", result.get("internalId"));
+        assertTrue(result.containsKey("address"));
+
+        Map<String, Object> nested = (Map<String, Object>) result.get("address");
+        assertEquals("Linz", nested.get("city"));
+        assertEquals("Straße 9", nested.get("street"));
+    }
+    
 
     @SuppressWarnings("unchecked")
     private Map<String, Object> asMap(Object dto, String profile) {

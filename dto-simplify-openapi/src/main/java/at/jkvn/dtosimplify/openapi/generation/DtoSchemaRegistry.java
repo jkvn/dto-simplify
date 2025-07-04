@@ -1,7 +1,9 @@
 package at.jkvn.dtosimplify.openapi.generation;
 
-import at.jkvn.dtosimplify.core.annotation.Dto;
-import at.jkvn.dtosimplify.core.annotation.DtoSchema;
+import at.jkvn.dtosimplify.core.annotation.response.Dto;
+import at.jkvn.dtosimplify.core.annotation.schema.DtoSchema;
+import at.jkvn.dtosimplify.core.annotation.response.DtoView;
+import at.jkvn.dtosimplify.core.annotation.response.DtoViews;
 import at.jkvn.dtosimplify.core.metadata.ClassMetadata;
 import at.jkvn.dtosimplify.core.metadata.DtoMetadataRegistry;
 import at.jkvn.dtosimplify.core.proxy.TypeAdapterRegistry;
@@ -14,6 +16,8 @@ import javax.tools.FileObject;
 import javax.tools.StandardLocation;
 import java.io.*;
 import java.lang.reflect.Field;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.util.*;
 
@@ -86,12 +90,35 @@ public class DtoSchemaRegistry {
                     .description(description);
 
             for (Field field : clazz.getDeclaredFields()) {
-                for (Dto dto : field.getAnnotationsByType(Dto.class)) {
+                Dto[] dtoAnnotations = field.getAnnotationsByType(Dto.class);
+                boolean includeField = false;
+
+                for (Dto dto : dtoAnnotations) {
                     if (dto.value().equals(profile)) {
-                        Schema<?> fieldSchema = getSchemaFromJavaType(field.getType(), profile);
-                        schema.addProperty(field.getName(), fieldSchema);
+                        includeField = true;
                         break;
                     }
+                }
+                
+                if (!includeField) {
+                    DtoViews dtoViews = clazz.getAnnotation(DtoViews.class);
+                    if (dtoViews != null) {
+                        for (DtoView view : dtoViews.value()) {
+                            if (view.value().equals(profile)) {
+                                for (String includedField : view.include()) {
+                                    if (includedField.equals(field.getName())) {
+                                        includeField = true;
+                                        break;
+                                    }
+                                }
+                            }
+                            if (includeField) break;
+                        }
+                    }
+                }
+                if (includeField) {
+                    Schema<?> fieldSchema = getSchemaFromJavaType(field, profile);
+                    schema.addProperty(field.getName(), fieldSchema);
                 }
             }
 
@@ -99,14 +126,16 @@ public class DtoSchemaRegistry {
         }
     }
 
-    private static Schema<?> getSchemaFromJavaType(Class<?> fieldType, String profile) {
-        Optional<Schema<?>> optionalSchema = TypeAdapterRegistry.findTypeAdapter(fieldType)
-                .map(adapter -> adapter.toOpenApiSchema(fieldType, profile));
+    private static Schema<?> getSchemaFromJavaType(Field field, String profile) {
+        Optional<Schema<?>> optionalSchema = TypeAdapterRegistry.findTypeAdapter(field.getType())
+                .map(adapter -> adapter.toOpenApiSchema(field.getType(), profile));
 
-        return optionalSchema.orElseGet(() -> getFallbackSchema(fieldType, profile));
+        return optionalSchema.orElseGet(() -> getFallbackSchema(field, profile));
     }
 
-    private static Schema<?> getFallbackSchema(Class<?> fieldType, String profile) {
+    private static Schema<?> getFallbackSchema(Field field, String profile) {
+        Class<?> fieldType = field.getType();
+        
         if (fieldType.equals(String.class)) {
             return new StringSchema();
         } else if (fieldType.isPrimitive()
@@ -122,7 +151,19 @@ public class DtoSchemaRegistry {
                 || fieldType.equals(BigDecimal.class)) {
             return new NumberSchema();
         } else if (Collection.class.isAssignableFrom(fieldType)) {
-            return new ArraySchema().items(new StringSchema()); //Todo: handle generic types
+            Class<?> listFieldType = getListElementType(field);
+
+            //Todo: handel java simple types and primitives (maybe rekursive this method)
+            Schema<?> schema = new ObjectSchema();
+            try {
+                ClassMetadata nestedMetadata = DtoMetadataRegistry.getMetadata(listFieldType);
+                if (!nestedMetadata.getFieldsToView(profile).isEmpty()) {
+                    schema = new Schema<>().$ref("#/components/schemas/" + listFieldType.getSimpleName() + "_" + profile);
+                }
+            } catch (Exception ignored) {
+            }
+            
+            return new ArraySchema().items(schema);
         } else if (Map.class.isAssignableFrom(fieldType)) {
             return new ObjectSchema().additionalProperties(new StringSchema());
         } else {
@@ -133,11 +174,25 @@ public class DtoSchemaRegistry {
                 }
             } catch (Exception ignored) {
             }
-            
+
             return new ObjectSchema();
         }
     }
 
+    public static Class<?> getListElementType(Field field) {
+        Type genericType = field.getGenericType();
+        if (genericType instanceof ParameterizedType parameterizedType) {
+            Type[] typeArgs = parameterizedType.getActualTypeArguments();
+            if (typeArgs.length == 1) {
+                Type typeArg = typeArgs[0];
+                if (typeArg instanceof Class<?> clazz) {
+                    return clazz;
+                }
+            }
+        }
+        return Object.class;
+    }
+    
     public static void writeMetaInfFile(Collection<String> classNames, Filer filer, Messager messager) {
         try {
             FileObject file = filer.createResource(

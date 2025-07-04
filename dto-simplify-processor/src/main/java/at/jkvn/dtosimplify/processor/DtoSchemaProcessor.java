@@ -1,6 +1,6 @@
 package at.jkvn.dtosimplify.processor;
 
-import at.jkvn.dtosimplify.core.annotation.DtoSchema;
+import at.jkvn.dtosimplify.core.annotation.schema.DtoSchema;
 import at.jkvn.dtosimplify.openapi.generation.DtoSchemaRegistry;
 
 import javax.annotation.processing.*;
@@ -12,8 +12,8 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 @SupportedAnnotationTypes({
-        "at.jkvn.dtosimplify.core.annotation.DtoSchema",
-        "at.jkvn.dtosimplify.core.annotation.DtoSchema.Container"
+        "at.jkvn.dtosimplify.core.annotation.schema.DtoSchema",
+        "at.jkvn.dtosimplify.core.annotation.schema.DtoSchema.Container"
 })
 @SupportedSourceVersion(SourceVersion.RELEASE_17)
 public class DtoSchemaProcessor extends AbstractProcessor {

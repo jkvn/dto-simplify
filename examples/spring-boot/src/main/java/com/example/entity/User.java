@@ -1,8 +1,8 @@
 package com.example.entity;
 
 
-import at.jkvn.dtosimplify.core.annotation.Dto;
-import at.jkvn.dtosimplify.core.annotation.DtoSchema;
+import at.jkvn.dtosimplify.core.annotation.response.Dto;
+import at.jkvn.dtosimplify.core.annotation.schema.DtoSchema;
 
 import java.util.List;
 

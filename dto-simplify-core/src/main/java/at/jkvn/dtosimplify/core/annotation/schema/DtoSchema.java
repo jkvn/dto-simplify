@@ -1,4 +1,4 @@
-package at.jkvn.dtosimplify.core.annotation;
+package at.jkvn.dtosimplify.core.annotation.schema;
 
 import java.lang.annotation.*;
 
