@@ -2,9 +2,12 @@ plugins {
     id("java")
 }
 
+val gitTag: String? = System.getenv("VERSION")
+val resolvedVersion = if (gitTag != null && !gitTag.endsWith("SNAPSHOT")) gitTag else "develop"
+
 allprojects {
     group = "at.jkvn.dtosimplify"
-    version = "0.0.1-SNAPSHOT"
+    version = resolvedVersion
 
     repositories {
         mavenCentral()
@@ -23,7 +26,7 @@ subprojects {
 
                         groupId = "at.jkvn.dtosimplify"
                         artifactId = project.name
-                        version = rootProject.version.toString()
+                        version = resolvedVersion
                     }
                 }
 
