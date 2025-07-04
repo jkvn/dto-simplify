@@ -6,6 +6,10 @@ val quarkusPlatformGroupId: String by project
 val quarkusPlatformArtifactId: String by project
 val quarkusPlatformVersion: String by project
 
+tasks.withType<GenerateModuleMetadata>().configureEach {
+    suppressedValidationErrors.add("enforced-platform")
+}
+
 dependencies {
     implementation(project(":dto-simplify-openapi"))
     implementation(project(":dto-simplify-quarkus:runtime"))
